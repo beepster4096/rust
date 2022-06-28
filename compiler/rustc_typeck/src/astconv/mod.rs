@@ -2604,6 +2604,7 @@ impl<'o, 'tcx> dyn AstConv<'tcx> + 'o {
                 let t = self.ast_ty_to_ty_inner(mt.ty, true, false);
                 tcx.mk_ref(r, ty::TypeAndMut { ty: t, mutbl: mt.mutbl })
             }
+            hir::TyKind::SuperPtr(ref ty) => tcx.mk_ty(ty::SuperPtr(self.ast_ty_to_ty(ty))),
             hir::TyKind::Never => tcx.types.never,
             hir::TyKind::Tup(fields) => tcx.mk_tup(fields.iter().map(|t| self.ast_ty_to_ty(t))),
             hir::TyKind::BareFn(bf) => {

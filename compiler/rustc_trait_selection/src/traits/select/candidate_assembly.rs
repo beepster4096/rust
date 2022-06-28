@@ -946,6 +946,7 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
             | ty::Str
             | ty::RawPtr(_)
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::FnDef(..)
             | ty::FnPtr(_)
             | ty::Never

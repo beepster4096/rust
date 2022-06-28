@@ -1649,7 +1649,7 @@ impl<'a, 'tcx> InferCtxtPrivExt<'a, 'tcx> for InferCtxt<'a, 'tcx> {
                 | ty::Uint(..)
                 | ty::Float(..)
                 | ty::Infer(ty::IntVar(..) | ty::FloatVar(..)) => Some(4),
-                ty::Ref(..) | ty::RawPtr(..) => Some(5),
+                ty::Ref(..) | ty::RawPtr(..) | ty::SuperPtr(..) => Some(5),
                 ty::Array(..) | ty::Slice(..) => Some(6),
                 ty::FnDef(..) | ty::FnPtr(..) => Some(7),
                 ty::Dynamic(..) => Some(8),
@@ -1663,6 +1663,7 @@ impl<'a, 'tcx> InferCtxtPrivExt<'a, 'tcx> for InferCtxt<'a, 'tcx> {
                 ty::Generator(..) => Some(16),
                 ty::Foreign(..) => Some(17),
                 ty::GeneratorWitness(..) => Some(18),
+                //ty::SuperPtr(..) => Some(19),
                 ty::Placeholder(..) | ty::Bound(..) | ty::Infer(..) | ty::Error(_) => None,
             }
         }
@@ -1670,9 +1671,9 @@ impl<'a, 'tcx> InferCtxtPrivExt<'a, 'tcx> for InferCtxt<'a, 'tcx> {
         let strip_references = |mut t: Ty<'tcx>| -> Ty<'tcx> {
             loop {
                 match t.kind() {
-                    ty::Ref(_, inner, _) | ty::RawPtr(ty::TypeAndMut { ty: inner, .. }) => {
-                        t = *inner
-                    }
+                    ty::Ref(_, inner, _)
+                    | ty::RawPtr(ty::TypeAndMut { ty: inner, .. })
+                    | ty::SuperPtr(inner) => t = *inner,
                     _ => break t,
                 }
             }
@@ -1696,9 +1697,10 @@ impl<'a, 'tcx> InferCtxtPrivExt<'a, 'tcx> for InferCtxt<'a, 'tcx> {
                 //
                 // We still upgrade successful matches to `ignoring_lifetimes: true`
                 // to prioritize that impl.
-                (ty::Ref(..) | ty::RawPtr(..), ty::Ref(..) | ty::RawPtr(..)) => {
-                    self.fuzzy_match_tys(a, b, true).is_some()
-                }
+                (
+                    ty::Ref(..) | ty::RawPtr(..) | ty::SuperPtr(..),
+                    ty::Ref(..) | ty::RawPtr(..) | ty::SuperPtr(..),
+                ) => self.fuzzy_match_tys(a, b, true).is_some(),
                 _ => true,
             }
             .then_some(CandidateSimilarity::Fuzzy { ignoring_lifetimes })

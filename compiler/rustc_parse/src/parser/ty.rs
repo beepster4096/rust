@@ -395,7 +395,7 @@ impl<'a> Parser<'a> {
 
     /// Parses a raw pointer type: `*[const | mut] $type`.
     fn parse_ty_ptr(&mut self) -> PResult<'a, TyKind> {
-        let mutbl = self.parse_const_or_mut().unwrap_or_else(|| {
+        /*let mutbl = self.parse_const_or_mut().unwrap_or_else(|| {
             let span = self.prev_token.span;
             let msg = "expected mut or const in raw pointer type";
             self.struct_span_err(span, msg)
@@ -405,7 +405,31 @@ impl<'a> Parser<'a> {
             Mutability::Not
         });
         let ty = self.parse_ty_no_plus()?;
-        Ok(TyKind::Ptr(MutTy { ty, mutbl }))
+        Ok(TyKind::Ptr(MutTy { ty, mutbl }))*/
+
+        let mutbl = if let Some(mutbl) = self.parse_const_or_mut() {
+            Some(mutbl)
+        } else if self.eat_keyword_noexpect(kw::Super) {
+            let span = self.prev_token.span;
+            self.sess.gated_spans.gate(sym::super_pointer, span);
+            None
+        } else {
+            let span = self.prev_token.span;
+            let msg = "expected mut or const in raw pointer type";
+            self.struct_span_err(span, msg)
+                .span_label(span, msg)
+                .help("use `*mut T` or `*const T` as appropriate")
+                .emit();
+            Some(Mutability::Not)
+        };
+
+        let ty = self.parse_ty_no_plus()?;
+
+        if let Some(mutbl) = mutbl {
+            Ok(TyKind::Ptr(MutTy { ty, mutbl }))
+        } else {
+            Ok(TyKind::SuperPtr(ty))
+        }
     }
 
     /// Parses an array (`[TYPE; EXPR]`) or slice (`[TYPE]`) type.

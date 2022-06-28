@@ -2015,6 +2015,7 @@ impl<'tcx> Ty<'tcx> {
             | ty::Slice(_)
             | ty::RawPtr(_)
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::FnDef(..)
             | ty::FnPtr(..)
             | ty::Dynamic(..)
@@ -2053,6 +2054,7 @@ impl<'tcx> Ty<'tcx> {
             | ty::RawPtr(..)
             | ty::Char
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::Generator(..)
             | ty::GeneratorWitness(..)
             | ty::Array(..)
@@ -2140,6 +2142,7 @@ impl<'tcx> Ty<'tcx> {
             | ty::RawPtr(..)
             | ty::Char
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::Generator(..)
             | ty::GeneratorWitness(..)
             | ty::Array(..)
@@ -2201,7 +2204,7 @@ impl<'tcx> Ty<'tcx> {
 
             // Thin pointers & thin shared references are pure-clone-copy, but for
             // anything with custom metadata it might be more complicated.
-            ty::Ref(_, _, hir::Mutability::Not) | ty::RawPtr(..) => false,
+            ty::Ref(_, _, hir::Mutability::Not) | ty::RawPtr(..) | ty::SuperPtr(_) => false,
 
             ty::Generator(..) | ty::GeneratorWitness(..) => false,
 

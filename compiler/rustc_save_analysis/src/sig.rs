@@ -177,6 +177,11 @@ impl<'hir> Sig for hir::Ty<'hir> {
                 let text = format!("{}{}", prefix, nested.text);
                 Ok(replace_text(nested, text))
             }
+            hir::TyKind::SuperPtr(ref ty) => {
+                let nested = ty.make(offset + 1, id, scx)?;
+                let text = format!("*super {}", nested.text);
+                Ok(replace_text(nested, text))
+            }
             hir::TyKind::Never => Ok(text_sig("!".to_owned())),
             hir::TyKind::Tup(ts) => {
                 let mut text = "(".to_owned();

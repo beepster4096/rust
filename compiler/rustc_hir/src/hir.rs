@@ -2528,6 +2528,8 @@ pub enum TyKind<'hir> {
     Ptr(MutTy<'hir>),
     /// A reference (i.e., `&'a T` or `&'a mut T`).
     Rptr(Lifetime, MutTy<'hir>),
+    /// TODO
+    SuperPtr(&'hir Ty<'hir>),
     /// A bare function (e.g., `fn(usize) -> bool`).
     BareFn(&'hir BareFnTy<'hir>),
     /// The never type (`!`).

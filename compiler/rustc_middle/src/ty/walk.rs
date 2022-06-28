@@ -149,6 +149,9 @@ fn push_inner<'tcx>(stack: &mut TypeWalkerStack<'tcx>, parent: GenericArg<'tcx>)
                 stack.push(ty.into());
                 stack.push(lt.into());
             }
+            ty::SuperPtr(ty) => {
+                stack.push(ty.into());
+            }
             ty::Projection(data) => {
                 stack.extend(data.substs.iter().rev());
             }

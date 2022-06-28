@@ -457,6 +457,7 @@ impl<'cx, 'tcx> TypeFolder<'tcx> for Canonicalizer<'cx, 'tcx> {
             | ty::Slice(..)
             | ty::RawPtr(..)
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::FnDef(..)
             | ty::FnPtr(_)
             | ty::Dynamic(..)

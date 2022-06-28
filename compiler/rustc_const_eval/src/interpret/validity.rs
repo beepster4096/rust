@@ -593,6 +593,7 @@ impl<'rt, 'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> ValidityVisitor<'rt, 'mir, '
                 self.check_safe_pointer(value, "reference")?;
                 Ok(true)
             }
+            ty::SuperPtr(_) => Ok(true), // TODO
             ty::FnPtr(_sig) => {
                 let value = try_validation!(
                     self.ecx.read_scalar(value).and_then(|v| v.check_init()),

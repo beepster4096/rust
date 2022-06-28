@@ -2021,6 +2021,7 @@ impl<'tcx> TyCtxt<'tcx> {
                     Slice,
                     RawPtr,
                     Ref,
+                    SuperPtr,
                     FnDef,
                     FnPtr,
                     Placeholder,

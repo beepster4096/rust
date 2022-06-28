@@ -427,6 +427,7 @@ pub fn walk_ty<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Ty) {
             walk_list!(visitor, visit_lifetime, opt_lifetime, LifetimeCtxt::Rptr);
             visitor.visit_ty(&mutable_type.ty)
         }
+        TyKind::SuperPtr(ref ty) => visitor.visit_ty(ty),
         TyKind::Tup(ref tuple_element_types) => {
             walk_list!(visitor, visit_ty, tuple_element_types);
         }

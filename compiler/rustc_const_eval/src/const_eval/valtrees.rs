@@ -100,7 +100,7 @@ pub(crate) fn const_to_valtree_inner<'tcx>(
         // equality at compile-time (see `ptr_guaranteed_eq`/`_ne`).
         // Technically we could allow function pointers (represented as `ty::Instance`), but this is not guaranteed to
         // agree with runtime equality tests.
-        ty::FnPtr(_) | ty::RawPtr(_) => Err(ValTreeCreationError::NonSupportedType),
+        ty::FnPtr(_) | ty::RawPtr(_) | ty::SuperPtr(_) => Err(ValTreeCreationError::NonSupportedType),
 
         ty::Ref(_, _, _)  => {
             let Ok(derefd_place)= ecx.deref_operand(&place.into()) else {
@@ -324,6 +324,7 @@ pub fn valtree_to_const_value<'tcx>(
         | ty::GeneratorWitness(..)
         | ty::FnPtr(_)
         | ty::RawPtr(_)
+        | ty::SuperPtr(_)
         | ty::Str
         | ty::Slice(_)
         | ty::Dynamic(..) => bug!("no ValTree should have been created for type {:?}", ty.kind()),

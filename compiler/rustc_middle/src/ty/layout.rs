@@ -710,7 +710,9 @@ impl<'tcx> LayoutCx<'tcx, TyCtxt<'tcx>> {
             }),
 
             // Potentially-wide pointers.
-            ty::Ref(_, pointee, _) | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. }) => {
+            ty::Ref(_, pointee, _)
+            | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. })
+            | ty::SuperPtr(pointee) => {
                 let mut data_ptr = scalar_unit(Pointer);
                 if !ty.is_unsafe_ptr() {
                     data_ptr.valid_range_mut().start = 1;
@@ -2445,7 +2447,9 @@ where
                 | ty::Dynamic(..) => bug!("TyAndLayout::field({:?}): not applicable", this),
 
                 // Potentially-fat pointers.
-                ty::Ref(_, pointee, _) | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. }) => {
+                ty::Ref(_, pointee, _)
+                | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. })
+                | ty::SuperPtr(pointee) => {
                     assert!(i < this.fields.count());
 
                     // Reuse the fat `*T` type as its own thin pointer data field.

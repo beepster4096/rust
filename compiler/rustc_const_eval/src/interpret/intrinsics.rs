@@ -93,6 +93,7 @@ pub(crate) fn eval_nullary_intrinsic<'tcx>(
             | ty::Slice(_)
             | ty::RawPtr(_)
             | ty::Ref(_, _, _)
+            | ty::SuperPtr(_)
             | ty::FnDef(_, _)
             | ty::FnPtr(_)
             | ty::Dynamic(_, _)

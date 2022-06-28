@@ -725,6 +725,7 @@ fn ty_is_local_constructor(tcx: TyCtxt<'_>, ty: Ty<'_>, in_crate: InCrate) -> bo
         | ty::Slice(..)
         | ty::RawPtr(..)
         | ty::Ref(..)
+        | ty::SuperPtr(..)
         | ty::Never
         | ty::Tuple(..)
         | ty::Param(..)

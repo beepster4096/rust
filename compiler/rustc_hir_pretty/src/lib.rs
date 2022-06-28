@@ -301,6 +301,10 @@ impl<'a> State<'a> {
                 self.print_opt_lifetime(lifetime);
                 self.print_mt(mt, false);
             }
+            hir::TyKind::SuperPtr(ref ty) => {
+                self.word_nbsp("*super");
+                self.print_type(&ty);
+            }
             hir::TyKind::Never => {
                 self.word("!");
             }

@@ -528,7 +528,7 @@ impl<'a, 'tcx> WfPredicates<'a, 'tcx> {
                     }
                 }
 
-                ty::RawPtr(_) => {
+                ty::RawPtr(_) | ty::SuperPtr(_) => {
                     // Simple cases that are WF if their type args are WF.
                 }
 

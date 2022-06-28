@@ -169,6 +169,8 @@ declare_features! (
     (active, rustc_attrs, "1.0.0", None, None),
     /// Allows using the `#[stable]` and `#[unstable]` attributes.
     (active, staged_api, "1.0.0", None, None),
+    /// Allows using the `*super T` type.
+    (active, super_pointer, "1.63.0", None, None),
     /// Added for testing E0705; perma-unstable.
     (active, test_2018_feature, "1.31.0", None, Some(Edition::Edition2018)),
     /// Added for testing unstable lints; perma-unstable.

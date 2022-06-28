@@ -499,6 +499,11 @@ pub fn super_relate_tys<'tcx, R: TypeRelation<'tcx>>(
             Ok(tcx.mk_ref(r, mt))
         }
 
+        (&ty::SuperPtr(a_ty), &ty::SuperPtr(b_ty)) => {
+            let ty = relation.relate(a_ty, b_ty)?;
+            Ok(tcx.mk_ty(ty::SuperPtr(ty)))
+        }
+
         (&ty::Array(a_t, sz_a), &ty::Array(b_t, sz_b)) => {
             let t = relation.relate(a_t, b_t)?;
             match relation.relate(sz_a, sz_b) {

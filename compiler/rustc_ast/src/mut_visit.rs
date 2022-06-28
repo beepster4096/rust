@@ -459,6 +459,7 @@ pub fn noop_visit_ty<T: MutVisitor>(ty: &mut P<Ty>, vis: &mut T) {
             visit_opt(lt, |lt| noop_visit_lifetime(lt, vis));
             vis.visit_mt(mt);
         }
+        TyKind::SuperPtr(ty) => vis.visit_ty(ty),
         TyKind::BareFn(bft) => {
             let BareFnTy { unsafety, ext: _, generic_params, decl, decl_span } = bft.deref_mut();
             visit_unsafety(unsafety, vis);

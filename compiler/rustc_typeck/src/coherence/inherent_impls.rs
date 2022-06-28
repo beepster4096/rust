@@ -218,6 +218,7 @@ impl<'tcx> InherentCollect<'tcx> {
             | ty::Slice(_)
             | ty::RawPtr(_)
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::Never
             | ty::Tuple(..) => self.check_primitive_impl(item.def_id, self_ty, items, ty.span),
             ty::FnPtr(_) | ty::Projection(..) | ty::Opaque(..) | ty::Param(_) => {

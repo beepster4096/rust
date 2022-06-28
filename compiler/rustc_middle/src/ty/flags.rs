@@ -201,6 +201,10 @@ impl FlagComputation {
                 self.add_ty(ty);
             }
 
+            &ty::SuperPtr(ty) => {
+                self.add_ty(ty);
+            }
+
             &ty::Tuple(types) => {
                 self.add_tys(types);
             }

@@ -952,6 +952,7 @@ impl<'tcx> TypeSuperFoldable<'tcx> for Ty<'tcx> {
     ) -> Result<Self, F::Error> {
         let kind = match *self.kind() {
             ty::RawPtr(tm) => ty::RawPtr(tm.try_fold_with(folder)?),
+            ty::SuperPtr(ty) => ty::SuperPtr(ty.try_fold_with(folder)?),
             ty::Array(typ, sz) => ty::Array(typ.try_fold_with(folder)?, sz.try_fold_with(folder)?),
             ty::Slice(typ) => ty::Slice(typ.try_fold_with(folder)?),
             ty::Adt(tid, substs) => ty::Adt(tid, substs.try_fold_with(folder)?),
@@ -993,6 +994,7 @@ impl<'tcx> TypeSuperFoldable<'tcx> for Ty<'tcx> {
     fn super_visit_with<V: TypeVisitor<'tcx>>(&self, visitor: &mut V) -> ControlFlow<V::BreakTy> {
         match self.kind() {
             ty::RawPtr(ref tm) => tm.visit_with(visitor),
+            ty::SuperPtr(ref ty) => ty.visit_with(visitor),
             ty::Array(typ, sz) => {
                 typ.visit_with(visitor)?;
                 sz.visit_with(visitor)

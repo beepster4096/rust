@@ -15,8 +15,8 @@ fn sized_constraint_for_ty<'tcx>(
     use rustc_type_ir::sty::TyKind::*;
 
     let result = match ty.kind() {
-        Bool | Char | Int(..) | Uint(..) | Float(..) | RawPtr(..) | Ref(..) | FnDef(..)
-        | FnPtr(_) | Array(..) | Closure(..) | Generator(..) | Never => vec![],
+        Bool | Char | Int(..) | Uint(..) | Float(..) | RawPtr(..) | Ref(..) | SuperPtr(..)
+        | FnDef(..) | FnPtr(_) | Array(..) | Closure(..) | Generator(..) | Never => vec![],
 
         Str | Dynamic(..) | Slice(_) | Foreign(..) | Error(_) | GeneratorWitness(..) => {
             // these are never sized - return the target type

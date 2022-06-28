@@ -275,6 +275,7 @@ where
             | ty::Tuple(..)
             | ty::RawPtr(..)
             | ty::Ref(..)
+            | ty::SuperPtr(..)
             | ty::FnPtr(..)
             | ty::Param(..)
             | ty::Error(_)

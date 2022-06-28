@@ -1859,6 +1859,7 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
             | ty::RawPtr(..)
             | ty::Char
             | ty::Ref(..)
+            | ty::SuperPtr(_)
             | ty::Generator(..)
             | ty::GeneratorWitness(..)
             | ty::Array(..)
@@ -1918,6 +1919,7 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
             | ty::RawPtr(..)
             | ty::Never
             | ty::Ref(_, _, hir::Mutability::Not)
+            | ty::SuperPtr(_)
             | ty::Array(..) => {
                 // Implementations provided in libcore
                 None
@@ -2005,9 +2007,9 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
                 bug!("asked to assemble constituent types of unexpected type: {:?}", t);
             }
 
-            ty::RawPtr(ty::TypeAndMut { ty: element_ty, .. }) | ty::Ref(_, element_ty, _) => {
-                t.rebind(vec![element_ty])
-            }
+            ty::RawPtr(ty::TypeAndMut { ty: element_ty, .. })
+            | ty::Ref(_, element_ty, _)
+            | ty::SuperPtr(element_ty) => t.rebind(vec![element_ty]),
 
             ty::Array(element_ty, _) | ty::Slice(element_ty) => t.rebind(vec![element_ty]),
 

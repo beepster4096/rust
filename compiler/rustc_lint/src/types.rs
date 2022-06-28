@@ -1070,7 +1070,7 @@ impl<'a, 'tcx> ImproperCTypesVisitor<'a, 'tcx> {
                 FfiSafe
             }
 
-            ty::RawPtr(ty::TypeAndMut { ty, .. })
+            ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::SuperPtr(ty)
                 if match ty.kind() {
                     ty::Tuple(tuple) => tuple.is_empty(),
                     _ => false,
@@ -1079,7 +1079,7 @@ impl<'a, 'tcx> ImproperCTypesVisitor<'a, 'tcx> {
                 FfiSafe
             }
 
-            ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::Ref(_, ty, _) => {
+            ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::Ref(_, ty, _) | ty::SuperPtr(ty) => {
                 self.check_type_for_ffi(cache, ty)
             }
 

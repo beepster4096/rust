@@ -170,9 +170,9 @@ impl<'a, 'tcx> TypeVisitor<'tcx> for Search<'a, 'tcx> {
                 let kind = NonStructuralMatchTyKind::Generator;
                 return ControlFlow::Break(NonStructuralMatchTy { ty, kind });
             }
-            ty::RawPtr(..) => {
+            ty::RawPtr(..) | ty::SuperPtr(..) => {
                 // structural-match ignores substructure of
-                // `*const _`/`*mut _`, so skip `super_visit_with`.
+                // `*const _`/`*mut _`/`*super _`, so skip `super_visit_with`.
                 //
                 // For example, if you have:
                 // ```

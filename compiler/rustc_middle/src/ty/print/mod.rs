@@ -257,6 +257,8 @@ fn characteristic_def_id_of_type_cached<'a>(
 
         ty::Ref(_, ty, _) => characteristic_def_id_of_type_cached(ty, visited),
 
+        ty::SuperPtr(ty) => characteristic_def_id_of_type_cached(ty, visited),
+
         ty::Tuple(ref tys) => tys.iter().find_map(|ty| {
             if visited.insert(ty) {
                 return characteristic_def_id_of_type_cached(ty, visited);

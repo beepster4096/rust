@@ -1209,6 +1209,7 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
                 let lifetime = self.lower_lifetime(&region);
                 hir::TyKind::Rptr(lifetime, self.lower_mt(mt, itctx))
             }
+            TyKind::SuperPtr(ref ty) => hir::TyKind::SuperPtr(self.lower_ty(ty, itctx)),
             TyKind::BareFn(ref f) => {
                 self.with_lifetime_binder(t.id, &f.generic_params, |this, generic_params| {
                     hir::TyKind::BareFn(this.arena.alloc(hir::BareFnTy {

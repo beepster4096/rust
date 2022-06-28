@@ -153,6 +153,19 @@ fn push_debuginfo_type_name<'tcx>(
                 push_close_angle_bracket(cpp_like_debuginfo, output);
             }
         }
+        ty::SuperPtr(inner_type) => {
+            if cpp_like_debuginfo {
+                output.push_str("ptr_super$<");
+            } else {
+                output.push_str("*super ");
+            }
+
+            push_debuginfo_type_name(tcx, inner_type, qualified, output, visited);
+
+            if cpp_like_debuginfo {
+                push_close_angle_bracket(cpp_like_debuginfo, output);
+            }
+        }
         ty::Ref(_, inner_type, mutbl) => {
             // Slices and `&str` are treated like C++ pointers when computing debug
             // info for MSVC debugger. However, wrapping these types' names in a synthetic type

@@ -68,6 +68,9 @@ pub enum TyKind<I: Interner> {
     /// `&'a mut T` or `&'a T`.
     Ref(I::Region, I::Ty, I::Mutability),
 
+    /// TODO
+    SuperPtr(I::Ty),
+
     /// The anonymous type of a function declaration/definition. Each
     /// function has a unique type.
     ///
@@ -216,21 +219,22 @@ const fn tykind_discriminant<I: Interner>(value: &TyKind<I>) -> usize {
         Slice(_) => 9,
         RawPtr(_) => 10,
         Ref(_, _, _) => 11,
-        FnDef(_, _) => 12,
-        FnPtr(_) => 13,
-        Dynamic(_, _) => 14,
-        Closure(_, _) => 15,
-        Generator(_, _, _) => 16,
-        GeneratorWitness(_) => 17,
-        Never => 18,
-        Tuple(_) => 19,
-        Projection(_) => 20,
-        Opaque(_, _) => 21,
-        Param(_) => 22,
-        Bound(_, _) => 23,
-        Placeholder(_) => 24,
-        Infer(_) => 25,
-        Error(_) => 26,
+        SuperPtr(_) => 12,
+        FnDef(_, _) => 13,
+        FnPtr(_) => 14,
+        Dynamic(_, _) => 15,
+        Closure(_, _) => 16,
+        Generator(_, _, _) => 17,
+        GeneratorWitness(_) => 18,
+        Never => 19,
+        Tuple(_) => 20,
+        Projection(_) => 21,
+        Opaque(_, _) => 22,
+        Param(_) => 23,
+        Bound(_, _) => 24,
+        Placeholder(_) => 25,
+        Infer(_) => 26,
+        Error(_) => 27,
     }
 }
 
@@ -250,6 +254,7 @@ impl<I: Interner> Clone for TyKind<I> {
             Slice(t) => Slice(t.clone()),
             RawPtr(t) => RawPtr(t.clone()),
             Ref(r, t, m) => Ref(r.clone(), t.clone(), m.clone()),
+            SuperPtr(t) => SuperPtr(t.clone()),
             FnDef(d, s) => FnDef(d.clone(), s.clone()),
             FnPtr(s) => FnPtr(s.clone()),
             Dynamic(p, r) => Dynamic(p.clone(), r.clone()),
@@ -293,6 +298,7 @@ impl<I: Interner> PartialEq for TyKind<I> {
                     &Ref(ref __self_0, ref __self_1, ref __self_2),
                     &Ref(ref __arg_1_0, ref __arg_1_1, ref __arg_1_2),
                 ) => __self_0 == __arg_1_0 && __self_1 == __arg_1_1 && __self_2 == __arg_1_2,
+                (&SuperPtr(ref __self_0), &SuperPtr(ref __arg_1_0)) => __self_0 == __arg_1_0,
                 (&FnDef(ref __self_0, ref __self_1), &FnDef(ref __arg_1_0, ref __arg_1_1)) => {
                     __self_0 == __arg_1_0 && __self_1 == __arg_1_1
                 }
@@ -377,6 +383,9 @@ impl<I: Interner> Ord for TyKind<I> {
                     },
                     cmp => cmp,
                 },
+                (&SuperPtr(ref __self_0), &SuperPtr(ref __arg_1_0)) => {
+                    Ord::cmp(__self_0, __arg_1_0)
+                }
                 (&FnDef(ref __self_0, ref __self_1), &FnDef(ref __arg_1_0, ref __arg_1_1)) => {
                     match Ord::cmp(__self_0, __arg_1_0) {
                         Ordering::Equal => Ord::cmp(__self_1, __arg_1_1),
@@ -483,6 +492,10 @@ impl<I: Interner> hash::Hash for TyKind<I> {
                 hash::Hash::hash(__self_1, state);
                 hash::Hash::hash(__self_2, state)
             }
+            (&SuperPtr(ref __self_0),) => {
+                hash::Hash::hash(&tykind_discriminant(self), state);
+                hash::Hash::hash(__self_0, state)
+            }
             (&FnDef(ref __self_0, ref __self_1),) => {
                 hash::Hash::hash(&tykind_discriminant(self), state);
                 hash::Hash::hash(__self_0, state);
@@ -568,6 +581,7 @@ impl<I: Interner> fmt::Debug for TyKind<I> {
             Slice(f0) => Formatter::debug_tuple_field1_finish(f, "Slice", f0),
             RawPtr(f0) => Formatter::debug_tuple_field1_finish(f, "RawPtr", f0),
             Ref(f0, f1, f2) => Formatter::debug_tuple_field3_finish(f, "Ref", f0, f1, f2),
+            SuperPtr(f0) => Formatter::debug_tuple_field1_finish(f, "SuperPtr", f0),
             FnDef(f0, f1) => Formatter::debug_tuple_field2_finish(f, "FnDef", f0, f1),
             FnPtr(f0) => Formatter::debug_tuple_field1_finish(f, "FnPtr", f0),
             Dynamic(f0, f1) => Formatter::debug_tuple_field2_finish(f, "Dynamic", f0, f1),
@@ -651,6 +665,9 @@ where
                 r.encode(e);
                 t.encode(e);
                 m.encode(e);
+            }),
+            SuperPtr(t) => e.emit_enum_variant(disc, |e| {
+                t.encode(e);
             }),
             FnDef(def_id, substs) => e.emit_enum_variant(disc, |e| {
                 def_id.encode(e);
@@ -746,21 +763,22 @@ where
             9 => Slice(Decodable::decode(d)),
             10 => RawPtr(Decodable::decode(d)),
             11 => Ref(Decodable::decode(d), Decodable::decode(d), Decodable::decode(d)),
-            12 => FnDef(Decodable::decode(d), Decodable::decode(d)),
-            13 => FnPtr(Decodable::decode(d)),
-            14 => Dynamic(Decodable::decode(d), Decodable::decode(d)),
-            15 => Closure(Decodable::decode(d), Decodable::decode(d)),
-            16 => Generator(Decodable::decode(d), Decodable::decode(d), Decodable::decode(d)),
-            17 => GeneratorWitness(Decodable::decode(d)),
-            18 => Never,
-            19 => Tuple(Decodable::decode(d)),
-            20 => Projection(Decodable::decode(d)),
-            21 => Opaque(Decodable::decode(d), Decodable::decode(d)),
-            22 => Param(Decodable::decode(d)),
-            23 => Bound(Decodable::decode(d), Decodable::decode(d)),
-            24 => Placeholder(Decodable::decode(d)),
-            25 => Infer(Decodable::decode(d)),
-            26 => Error(Decodable::decode(d)),
+            12 => SuperPtr(Decodable::decode(d)),
+            13 => FnDef(Decodable::decode(d), Decodable::decode(d)),
+            14 => FnPtr(Decodable::decode(d)),
+            15 => Dynamic(Decodable::decode(d), Decodable::decode(d)),
+            16 => Closure(Decodable::decode(d), Decodable::decode(d)),
+            17 => Generator(Decodable::decode(d), Decodable::decode(d), Decodable::decode(d)),
+            18 => GeneratorWitness(Decodable::decode(d)),
+            19 => Never,
+            20 => Tuple(Decodable::decode(d)),
+            21 => Projection(Decodable::decode(d)),
+            22 => Opaque(Decodable::decode(d), Decodable::decode(d)),
+            23 => Param(Decodable::decode(d)),
+            24 => Bound(Decodable::decode(d), Decodable::decode(d)),
+            25 => Placeholder(Decodable::decode(d)),
+            26 => Infer(Decodable::decode(d)),
+            27 => Error(Decodable::decode(d)),
             _ => panic!(
                 "{}",
                 format!(
@@ -837,6 +855,9 @@ where
                 r.hash_stable(__hcx, __hasher);
                 t.hash_stable(__hcx, __hasher);
                 m.hash_stable(__hcx, __hasher);
+            }
+            SuperPtr(t) => {
+                t.hash_stable(__hcx, __hasher);
             }
             FnDef(def_id, substs) => {
                 def_id.hash_stable(__hcx, __hasher);

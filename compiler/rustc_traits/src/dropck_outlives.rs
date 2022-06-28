@@ -183,6 +183,7 @@ fn dtorck_constraint_for_ty<'tcx>(
         | ty::Foreign(..)
         | ty::RawPtr(..)
         | ty::Ref(..)
+        | ty::SuperPtr(..)
         | ty::FnDef(..)
         | ty::FnPtr(_)
         | ty::GeneratorWitness(..) => {

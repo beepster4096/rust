@@ -308,6 +308,7 @@ impl<'tcx> LowerInto<'tcx, chalk_ir::Ty<RustInterner<'tcx>>> for Ty<'tcx> {
                 region.lower_into(interner),
                 ty.lower_into(interner),
             ),
+            ty::SuperPtr(_) => todo!(), // TODO
             ty::FnDef(def_id, substs) => {
                 chalk_ir::TyKind::FnDef(chalk_ir::FnDefId(def_id), substs.lower_into(interner))
             }

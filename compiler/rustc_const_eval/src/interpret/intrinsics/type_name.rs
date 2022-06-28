@@ -45,6 +45,7 @@ impl<'tcx> Printer<'tcx> for AbsolutePathPrinter<'tcx> {
             | ty::Slice(_)
             | ty::RawPtr(_)
             | ty::Ref(_, _, _)
+            | ty::SuperPtr(_)
             | ty::FnPtr(_)
             | ty::Never
             | ty::Tuple(_)

@@ -33,6 +33,7 @@ where
     SliceSimplifiedType,
     RefSimplifiedType(Mutability),
     PtrSimplifiedType(Mutability),
+    SuperPtrSimplifiedType,
     NeverSimplifiedType,
     TupleSimplifiedType(usize),
     /// A trait object, all of whose components are markers
@@ -116,6 +117,7 @@ pub fn simplify_type<'tcx>(
             _ => Some(MarkerTraitObjectSimplifiedType),
         },
         ty::Ref(_, _, mutbl) => Some(RefSimplifiedType(mutbl)),
+        ty::SuperPtr(_) => Some(SuperPtrSimplifiedType),
         ty::FnDef(def_id, _) | ty::Closure(def_id, _) => Some(ClosureSimplifiedType(def_id)),
         ty::Generator(def_id, _, _) => Some(GeneratorSimplifiedType(def_id)),
         ty::GeneratorWitness(tys) => Some(GeneratorWitnessSimplifiedType(tys.skip_binder().len())),
@@ -175,6 +177,7 @@ impl<D: Copy + Debug + Eq> SimplifiedTypeGen<D> {
             SliceSimplifiedType => SliceSimplifiedType,
             RefSimplifiedType(m) => RefSimplifiedType(m),
             PtrSimplifiedType(m) => PtrSimplifiedType(m),
+            SuperPtrSimplifiedType => SuperPtrSimplifiedType,
             NeverSimplifiedType => NeverSimplifiedType,
             MarkerTraitObjectSimplifiedType => MarkerTraitObjectSimplifiedType,
             TupleSimplifiedType(n) => TupleSimplifiedType(n),
@@ -244,6 +247,7 @@ impl DeepRejectCtxt {
             | ty::RawPtr(..)
             | ty::Dynamic(..)
             | ty::Ref(..)
+            | ty::SuperPtr(..)
             | ty::Never
             | ty::Tuple(..)
             | ty::FnPtr(..)
@@ -304,6 +308,9 @@ impl DeepRejectCtxt {
                 ty::RawPtr(imp) => obl.mutbl == imp.mutbl && self.types_may_unify(obl.ty, imp.ty),
                 _ => false,
             },
+            ty::SuperPtr(obl_ty) => {
+                matches!(k, &ty::SuperPtr(impl_ty) if self.types_may_unify(obl_ty, impl_ty))
+            }
             ty::Dynamic(obl_preds, ..) => {
                 // Ideally we would walk the existential predicates here or at least
                 // compare their length. But considering that the relevant `Relate` impl

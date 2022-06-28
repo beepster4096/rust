@@ -1394,6 +1394,7 @@ symbols! {
         sub_assign,
         sub_with_overflow,
         suggestion,
+        super_pointer,
         sym,
         sync,
         t32,

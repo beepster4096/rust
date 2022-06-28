@@ -581,6 +581,9 @@ pub trait PrettyPrinter<'tcx>:
                 }
                 p!(print(ty::TypeAndMut { ty, mutbl }))
             }
+            ty::SuperPtr(ty) => {
+                p!("*super ", print(ty));
+            }
             ty::Never => p!("!"),
             ty::Tuple(ref tys) => {
                 p!("(", comma_sep(tys.iter()));

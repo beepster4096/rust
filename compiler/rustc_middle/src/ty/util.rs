@@ -836,6 +836,7 @@ impl<'tcx> Ty<'tcx> {
             | ty::Never
             | ty::Ref(..)
             | ty::RawPtr(_)
+            | ty::SuperPtr(_)
             | ty::FnDef(..)
             | ty::Error(_)
             | ty::FnPtr(_) => true,
@@ -876,6 +877,7 @@ impl<'tcx> Ty<'tcx> {
             | ty::Never
             | ty::Ref(..)
             | ty::RawPtr(_)
+            | ty::SuperPtr(_)
             | ty::FnDef(..)
             | ty::Error(_)
             | ty::FnPtr(_) => true,
@@ -1020,6 +1022,9 @@ impl<'tcx> Ty<'tcx> {
             | ty::Infer(_) => false,
 
             ty::Foreign(_) | ty::GeneratorWitness(..) | ty::Error(_) => false,
+
+            // TODO: unsure
+            ty::SuperPtr(_) => false,
         }
     }
 
@@ -1116,6 +1121,7 @@ pub fn needs_drop_components<'tcx>(
         | ty::GeneratorWitness(..)
         | ty::RawPtr(_)
         | ty::Ref(..)
+        | ty::SuperPtr(_)
         | ty::Str => Ok(SmallVec::new()),
 
         // Foreign types can never have destructors.
@@ -1170,6 +1176,7 @@ pub fn is_trivially_const_drop<'tcx>(ty: Ty<'tcx>) -> bool {
         | ty::Str
         | ty::RawPtr(_)
         | ty::Ref(..)
+        | ty::SuperPtr(_)
         | ty::FnDef(..)
         | ty::FnPtr(_)
         | ty::Never
