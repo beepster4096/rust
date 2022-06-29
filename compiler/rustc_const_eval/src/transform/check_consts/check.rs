@@ -525,7 +525,8 @@ impl<'tcx> Visitor<'tcx> for Checker<'_, 'tcx> {
                     | PointerCast::ArrayToPointer
                     | PointerCast::UnsafeFnPointer
                     | PointerCast::ClosureFnPointer(_)
-                    | PointerCast::ReifyFnPointer,
+                    | PointerCast::ReifyFnPointer
+                    | PointerCast::SuperToMutPointer,
                 ),
                 _,
                 _,

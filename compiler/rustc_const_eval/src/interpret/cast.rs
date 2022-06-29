@@ -49,7 +49,7 @@ impl<'mir, 'tcx: 'mir, M: Machine<'mir, 'tcx>> InterpCx<'mir, 'tcx, M> {
                 self.write_immediate(res, dest)?;
             }
 
-            Pointer(PointerCast::MutToConstPointer | PointerCast::ArrayToPointer) => {
+            Pointer(PointerCast::MutToConstPointer | PointerCast::ArrayToPointer | PointerCast::SuperToMutPointer) => {
                 // These are NOPs, but can be wide pointers.
                 let v = self.read_immediate(src)?;
                 self.write_immediate(*v, dest)?;

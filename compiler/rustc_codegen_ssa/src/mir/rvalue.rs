@@ -266,7 +266,7 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
                         }
                     }
                     mir::CastKind::Pointer(
-                        PointerCast::MutToConstPointer | PointerCast::ArrayToPointer,
+                        PointerCast::MutToConstPointer | PointerCast::ArrayToPointer | PointerCast::SuperToMutPointer,
                     )
                     | mir::CastKind::Misc
                     // Since int2ptr can have arbitrary integer types as input (so we have to do

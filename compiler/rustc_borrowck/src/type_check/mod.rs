@@ -2144,6 +2144,45 @@ impl<'a, 'tcx> TypeChecker<'a, 'tcx> {
                         }
                     }
 
+                    CastKind::Pointer(PointerCast::SuperToMutPointer) => {
+                        let ty::SuperPtr(ty_from) = op.ty(body, tcx).kind() else {
+                            span_mirbug!(
+                                self,
+                                rvalue,
+                                "unexpected base type for cast {:?}",
+                                ty,
+                            );
+                            return;
+                        };
+                        let ty::RawPtr(ty::TypeAndMut {
+                            ty: ty_to,
+                            mutbl: hir::Mutability::Mut,
+                        }) = ty.kind() else {
+                            span_mirbug!(
+                                self,
+                                rvalue,
+                                "unexpected target type for cast {:?}",
+                                ty,
+                            );
+                            return;
+                        };
+                        if let Err(terr) = self.sub_types(
+                            *ty_from,
+                            *ty_to,
+                            location.to_locations(),
+                            ConstraintCategory::Cast,
+                        ) {
+                            span_mirbug!(
+                                self,
+                                rvalue,
+                                "relating {:?} with {:?} yields {:?}",
+                                ty_from,
+                                ty_to,
+                                terr
+                            );
+                        }
+                    }
+
                     CastKind::PointerExposeAddress => {
                         let ty_from = op.ty(body, tcx);
                         let cast_ty_from = CastTy::from_ty(ty_from);

@@ -895,29 +895,42 @@ impl<'f, 'tcx> Coerce<'f, 'tcx> {
     ) -> CoerceResult<'tcx> {
         debug!("coerce_unsafe_ptr(a={:?}, b={:?})", a, b);
 
-        let (is_ref, mt_a) = match *a.kind() {
-            ty::Ref(_, ty, mutbl) => (true, ty::TypeAndMut { ty, mutbl }),
-            ty::RawPtr(mt) => (false, mt),
+        let mt_a = match *a.kind() {
+            ty::Ref(_, ty, mutbl) => ty::TypeAndMut { ty, mutbl },
+            ty::RawPtr(mt) => mt,
+            ty::SuperPtr(ty) => ty::TypeAndMut { ty, mutbl: hir::Mutability::Mut },
             _ => return self.unify_and(a, b, identity),
         };
         coerce_mutbls(mt_a.mutbl, mutbl_b)?;
 
         // Check that the types which they point at are compatible.
         let a_unsafe = self.tcx.mk_ptr(ty::TypeAndMut { mutbl: mutbl_b, ty: mt_a.ty });
-        // Although references and unsafe ptrs have the same
-        // representation, we still register an Adjust::DerefRef so that
-        // regionck knows that the region for `a` must be valid here.
-        if is_ref {
-            self.unify_and(a_unsafe, b, |target| {
+
+        match *a.kind() {
+            // Although references and unsafe ptrs have the same
+            // representation, we still register an Adjust::DerefRef so that
+            // regionck knows that the region for `a` must be valid here.
+            ty::Ref(..) => self.unify_and(a_unsafe, b, |target| {
                 vec![
                     Adjustment { kind: Adjust::Deref(None), target: mt_a.ty },
                     Adjustment { kind: Adjust::Borrow(AutoBorrow::RawPtr(mutbl_b)), target },
                 ]
-            })
-        } else if mt_a.mutbl != mutbl_b {
-            self.unify_and(a_unsafe, b, simple(Adjust::Pointer(PointerCast::MutToConstPointer)))
-        } else {
-            self.unify_and(a_unsafe, b, identity)
+            }),
+            ty::RawPtr(_) => {
+                if mt_a.mutbl != mutbl_b {
+                    self.unify_and(
+                        a_unsafe,
+                        b,
+                        simple(Adjust::Pointer(PointerCast::MutToConstPointer)),
+                    )
+                } else {
+                    self.unify_and(a_unsafe, b, identity)
+                }
+            }
+            ty::SuperPtr(_) => {
+                self.unify_and(a_unsafe, b, simple(Adjust::Pointer(PointerCast::SuperToMutPointer)))
+            }
+            _ => return self.unify_and(a, b, identity),
         }
     }
 }
