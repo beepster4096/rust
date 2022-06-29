@@ -2528,7 +2528,7 @@ pub enum TyKind<'hir> {
     Ptr(MutTy<'hir>),
     /// A reference (i.e., `&'a T` or `&'a mut T`).
     Rptr(Lifetime, MutTy<'hir>),
-    /// TODO
+    /// A super pointer (i.e., `*super T`).
     SuperPtr(&'hir Ty<'hir>),
     /// A bare function (e.g., `fn(usize) -> bool`).
     BareFn(&'hir BareFnTy<'hir>),

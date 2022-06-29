@@ -2201,11 +2201,11 @@ impl<'tcx> Ty<'tcx> {
             ty::FnPtr(..) => false,
 
             // Definitely absolutely not copy.
-            ty::Ref(_, _, hir::Mutability::Mut) => false,
+            ty::Ref(_, _, hir::Mutability::Mut) | ty::SuperPtr(_) => false,
 
             // Thin pointers & thin shared references are pure-clone-copy, but for
             // anything with custom metadata it might be more complicated.
-            ty::Ref(_, _, hir::Mutability::Not) | ty::RawPtr(..) | ty::SuperPtr(_) => false,
+            ty::Ref(_, _, hir::Mutability::Not) | ty::RawPtr(..) => false,
 
             ty::Generator(..) | ty::GeneratorWitness(..) => false,
 

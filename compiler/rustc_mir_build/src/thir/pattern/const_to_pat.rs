@@ -135,6 +135,9 @@ impl<'a, 'tcx> ConstToPat<'a, 'tcx> {
                 traits::NonStructuralMatchTyKind::Generator => {
                     "generators cannot be used in patterns".to_string()
                 }
+                traits::NonStructuralMatchTyKind::SuperPtr => {
+                    bug!("use of a super pointer inside a pattern")
+                }
                 traits::NonStructuralMatchTyKind::Param => {
                     bug!("use of a constant whose type is a parameter inside a pattern")
                 }

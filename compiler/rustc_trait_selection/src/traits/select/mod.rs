@@ -1919,7 +1919,6 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
             | ty::RawPtr(..)
             | ty::Never
             | ty::Ref(_, _, hir::Mutability::Not)
-            | ty::SuperPtr(_)
             | ty::Array(..) => {
                 // Implementations provided in libcore
                 None
@@ -1931,7 +1930,8 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
             | ty::Generator(..)
             | ty::GeneratorWitness(..)
             | ty::Foreign(..)
-            | ty::Ref(_, _, hir::Mutability::Mut) => None,
+            | ty::Ref(_, _, hir::Mutability::Mut)
+            | ty::SuperPtr(_) => None,
 
             ty::Tuple(tys) => {
                 // (*) binder moved here

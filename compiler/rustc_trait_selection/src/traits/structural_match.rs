@@ -26,6 +26,7 @@ pub enum NonStructuralMatchTyKind<'tcx> {
     Closure,
     Generator,
     Projection,
+    SuperPtr,
 }
 
 /// This method traverses the structure of `ty`, trying to find an
@@ -170,9 +171,9 @@ impl<'a, 'tcx> TypeVisitor<'tcx> for Search<'a, 'tcx> {
                 let kind = NonStructuralMatchTyKind::Generator;
                 return ControlFlow::Break(NonStructuralMatchTy { ty, kind });
             }
-            ty::RawPtr(..) | ty::SuperPtr(..) => {
+            ty::RawPtr(..) => {
                 // structural-match ignores substructure of
-                // `*const _`/`*mut _`/`*super _`, so skip `super_visit_with`.
+                // `*const _`/`*mut _`, so skip `super_visit_with`.
                 //
                 // For example, if you have:
                 // ```
@@ -186,6 +187,10 @@ impl<'a, 'tcx> TypeVisitor<'tcx> for Search<'a, 'tcx> {
                 // structural equality on `T` does not recur into the raw
                 // pointer. Therefore, one can still use `C` in a pattern.
                 return ControlFlow::CONTINUE;
+            }
+            ty::SuperPtr(_) => {
+                let kind = NonStructuralMatchTyKind::SuperPtr;
+                return ControlFlow::Break(NonStructuralMatchTy { ty, kind });
             }
             ty::FnDef(..) | ty::FnPtr(..) => {
                 // Types of formals and return in `fn(_) -> _` are also irrelevant;

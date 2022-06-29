@@ -1990,7 +1990,7 @@ pub enum TyKind {
     Ptr(MutTy),
     /// A reference (`&'a T` or `&'a mut T`).
     Rptr(Option<Lifetime>, MutTy),
-    /// TODO
+    /// A super pointer (`*super T`).
     SuperPtr(P<Ty>),
     /// A bare function (e.g., `fn(usize) -> bool`).
     BareFn(P<BareFnTy>),

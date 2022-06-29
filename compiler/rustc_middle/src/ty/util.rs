@@ -1002,6 +1002,9 @@ impl<'tcx> Ty<'tcx> {
             // Raw pointers use bitwise comparison.
             ty::RawPtr(_) | ty::FnPtr(_) => true,
 
+            // TODO(super_pointer) give reasoning
+            ty::SuperPtr(_) => false,
+
             // Floating point numbers are not `Eq`.
             ty::Float(_) => false,
 
@@ -1022,9 +1025,6 @@ impl<'tcx> Ty<'tcx> {
             | ty::Infer(_) => false,
 
             ty::Foreign(_) | ty::GeneratorWitness(..) | ty::Error(_) => false,
-
-            // TODO: unsure
-            ty::SuperPtr(_) => false,
         }
     }
 

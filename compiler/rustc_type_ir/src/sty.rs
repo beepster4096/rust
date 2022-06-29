@@ -68,7 +68,7 @@ pub enum TyKind<I: Interner> {
     /// `&'a mut T` or `&'a T`.
     Ref(I::Region, I::Ty, I::Mutability),
 
-    /// TODO
+    /// A super pointer. Written as `* super T`.
     SuperPtr(I::Ty),
 
     /// The anonymous type of a function declaration/definition. Each
