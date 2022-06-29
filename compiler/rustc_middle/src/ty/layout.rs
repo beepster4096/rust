@@ -2637,6 +2637,14 @@ where
                     address_space,
                 })
             }
+            ty::SuperPtr(ty) if offset.bytes() == 0 => {
+                tcx.layout_of(param_env.and(ty)).ok().map(|layout| PointeeInfo {
+                    size: layout.size,
+                    align: layout.align.abi,
+                    safe: Some(PointerKind::UniqueOwned),
+                    address_space: addr_space_of_ty(ty),
+                })
+            }
 
             _ => {
                 let mut data_variant = match this.variants {
@@ -2689,15 +2697,6 @@ where
                             if result.is_some() {
                                 break;
                             }
-                        }
-                    }
-                }
-
-                // FIXME(eddyb) This should be for `ptr::Unique<T>`, not `Box<T>`.
-                if let Some(ref mut pointee) = result {
-                    if let ty::Adt(def, _) = this.ty.kind() {
-                        if def.is_box() && offset.bytes() == 0 {
-                            pointee.safe = Some(PointerKind::UniqueOwned);
                         }
                     }
                 }

@@ -1890,6 +1890,7 @@ impl<'tcx> Ty<'tcx> {
             }
             Ref(_, ty, mutbl) => Some(TypeAndMut { ty: *ty, mutbl: *mutbl }),
             RawPtr(mt) if explicit => Some(*mt),
+            SuperPtr(ty) if explicit => Some(TypeAndMut { ty: *ty, mutbl: hir::Mutability::Not }),
             _ => None,
         }
     }

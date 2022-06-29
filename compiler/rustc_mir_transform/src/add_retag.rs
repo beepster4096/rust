@@ -33,7 +33,7 @@ fn is_stable(place: PlaceRef<'_>) -> bool {
     })
 }
 
-/// Determine whether this type may contain a reference (or box), and thus needs retagging.
+/// Determine whether this type may contain a reference (or super pointer), and thus needs retagging.
 /// We will only recurse `depth` times into Tuples/ADTs to bound the cost of this.
 fn may_contain_reference<'tcx>(ty: Ty<'tcx>, depth: u32, tcx: TyCtxt<'tcx>) -> bool {
     match ty.kind() {
@@ -49,8 +49,7 @@ fn may_contain_reference<'tcx>(ty: Ty<'tcx>, depth: u32, tcx: TyCtxt<'tcx>) -> b
         | ty::FnDef(..)
         | ty::Never => false,
         // References
-        ty::Ref(..) => true,
-        ty::Adt(..) if ty.is_box() => true,
+        ty::Ref(..) | ty::SuperPtr(..) => true,
         // Compound types: recurse
         ty::Array(ty, _) | ty::Slice(ty) => {
             // This does not branch so we keep the depth the same.
