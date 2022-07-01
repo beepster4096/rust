@@ -201,7 +201,8 @@ pub fn unsize_ptr<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>>(
     debug!("unsize_ptr: {:?} => {:?}", src_ty, dst_ty);
     match (src_ty.kind(), dst_ty.kind()) {
         (&ty::Ref(_, a, _), &ty::Ref(_, b, _) | &ty::RawPtr(ty::TypeAndMut { ty: b, .. }))
-        | (&ty::RawPtr(ty::TypeAndMut { ty: a, .. }), &ty::RawPtr(ty::TypeAndMut { ty: b, .. })) => {
+        | (&ty::RawPtr(ty::TypeAndMut { ty: a, .. }), &ty::RawPtr(ty::TypeAndMut { ty: b, .. }))
+        | (&ty::SuperPtr(a), &ty::SuperPtr(b)) => {
             assert_eq!(bx.cx().type_is_sized(a), old_info.is_none());
             let ptr_ty = bx.cx().type_ptr_to(bx.cx().backend_type(bx.cx().layout_of(b)));
             (bx.pointercast(src, ptr_ty), unsized_info(bx, a, b, old_info))
@@ -235,7 +236,7 @@ pub fn unsize_ptr<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>>(
             // HACK(eddyb) have to bitcast pointers until LLVM removes pointee types.
             (bx.bitcast(lldata, lldata_ty), bx.bitcast(llextra, llextra_ty))
         }
-        _ => bug!("unsize_ptr: called on bad types"),
+        _ => bug!("unsize_ptr: called on bad types: {:?} -> {:?}", src_ty, dst_ty),
     }
 }
 

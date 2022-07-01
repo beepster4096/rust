@@ -872,7 +872,7 @@ impl<'tcx> Visitor<'tcx> for CheckTraitImplStable<'tcx> {
     }
 
     fn visit_ty(&mut self, t: &'tcx Ty<'tcx>) {
-        if let TyKind::Never = t.kind {
+        if let TyKind::Never | TyKind::SuperPtr(_) = t.kind {
             self.fully_stable = false;
         }
         intravisit::walk_ty(self, t)

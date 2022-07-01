@@ -163,6 +163,8 @@ use core::ops::{
     CoerceUnsized, Deref, DerefMut, DispatchFromDyn, Generator, GeneratorState, Receiver,
 };
 use core::pin::Pin;
+#[cfg(not(bootstrap))]
+use core::ptr::super_ptr;
 use core::ptr::{self, Unique};
 use core::task::{Context, Poll};
 
@@ -194,7 +196,7 @@ mod thin;
 pub struct Box<
     T: ?Sized,
     #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global,
->(Unique<T>, A);
+>(#[cfg(bootstrap)] Unique<T>, #[cfg(not(bootstrap))] super_ptr!(T), A);
 
 impl<T> Box<T> {
     /// Allocates memory on the heap and then places `x` into it.
@@ -1006,7 +1008,14 @@ impl<T: ?Sized, A: Allocator> Box<T, A> {
     #[rustc_const_unstable(feature = "const_box", issue = "92521")]
     #[inline]
     pub const unsafe fn from_raw_in(raw: *mut T, alloc: A) -> Self {
-        Box(unsafe { Unique::new_unchecked(raw) }, alloc)
+        #[cfg(bootstrap)]
+        {
+            Box(unsafe { Unique::new_unchecked(raw) }, alloc)
+        }
+        #[cfg(not(bootstrap))]
+        {
+            Box(unsafe { mem::transmute::<*mut T, super_ptr!(T)>(raw) }, alloc)
+        }
     }
 
     /// Consumes the `Box`, returning a wrapped raw pointer.
@@ -1104,8 +1113,22 @@ impl<T: ?Sized, A: Allocator> Box<T, A> {
     #[rustc_const_unstable(feature = "const_box", issue = "92521")]
     #[inline]
     pub const fn into_raw_with_allocator(b: Self) -> (*mut T, A) {
-        let (leaked, alloc) = Box::into_unique(b);
-        (leaked.as_ptr(), alloc)
+        #[cfg(bootstrap)]
+        {
+            let (leaked, alloc) = Box::into_unique(b);
+            (leaked.as_ptr(), alloc)
+        }
+
+        #[cfg(not(bootstrap))]
+        {
+            // Box is recognized as a "unique pointer" by Stacked Borrows, but internally it is a
+            // raw pointer for the type system. Turning it directly into a raw pointer would not be
+            // recognized as "releasing" the unique pointer to permit aliased raw accesses,
+            // so all raw pointer methods have to go through `Box::leak`. Turning *that* to a raw pointer
+            // behaves correctly.
+            let alloc = unsafe { ptr::read(&b.1) };
+            (Box::leak(b), alloc)
+        }
     }
 
     #[unstable(
@@ -1116,6 +1139,7 @@ impl<T: ?Sized, A: Allocator> Box<T, A> {
     #[rustc_const_unstable(feature = "const_box", issue = "92521")]
     #[inline]
     #[doc(hidden)]
+    #[cfg(bootstrap)]
     pub const fn into_unique(b: Self) -> (Unique<T>, A) {
         // Box is recognized as a "unique pointer" by Stacked Borrows, but internally it is a
         // raw pointer for the type system. Turning it directly into a raw pointer would not be
@@ -1180,7 +1204,9 @@ impl<T: ?Sized, A: Allocator> Box<T, A> {
     where
         A: 'a,
     {
-        unsafe { &mut *mem::ManuallyDrop::new(b).0.as_ptr() }
+        let leaked = &mut **mem::ManuallyDrop::new(b);
+
+        unsafe { mem::transmute::<&'_ mut T, &'a mut T>(leaked) }
     }
 
     /// Converts a `Box<T>` into a `Pin<Box<T>>`. If `T` does not implement [`Unpin`], then
@@ -1249,6 +1275,10 @@ impl<T: Default> Default for Box<T> {
 impl<T> const Default for Box<[T]> {
     fn default() -> Self {
         let ptr: Unique<[T]> = Unique::<[T; 0]>::dangling();
+
+        #[cfg(not(bootstrap))]
+        let ptr: super_ptr!([T]) = unsafe { mem::transmute::<Unique<[T]>, super_ptr!([T])>(ptr) };
+
         Box(ptr, Global)
     }
 }
@@ -1263,6 +1293,10 @@ impl const Default for Box<str> {
             let bytes: Unique<[u8]> = Unique::<[u8; 0]>::dangling();
             Unique::new_unchecked(bytes.as_ptr() as *mut str)
         };
+
+        #[cfg(not(bootstrap))]
+        let ptr: super_ptr!(str) = unsafe { mem::transmute::<Unique<str>, super_ptr!(str)>(ptr) };
+
         Box(ptr, Global)
     }
 }

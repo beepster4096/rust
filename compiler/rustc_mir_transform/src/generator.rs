@@ -1232,26 +1232,7 @@ fn create_cases<'tcx>(
                     };
 
                     if let Some((box_place, box_ty)) = box_place {
-                        let unique_did = box_ty
-                            .ty_adt_def()
-                            .expect("expected Box to be an Adt")
-                            .non_enum_variant()
-                            .fields[0]
-                            .did;
-
-                        let Some(nonnull_def) = tcx.type_of(unique_did).ty_adt_def() else {
-                            span_bug!(tcx.def_span(unique_did), "expected Box to contain Unique")
-                        };
-
-                        let nonnull_did = nonnull_def.non_enum_variant().fields[0].did;
-
-                        let (unique_ty, nonnull_ty, ptr_ty) =
-                            crate::elaborate_box_derefs::build_ptr_tys(
-                                tcx,
-                                box_ty.boxed_ty(),
-                                unique_did,
-                                nonnull_did,
-                            );
+                        let ptr_ty = tcx.mk_ty(ty::SuperPtr(box_ty.boxed_ty()));
 
                         let ptr_local = body.local_decls.push(LocalDecl::new(ptr_ty, body.span));
 
@@ -1264,11 +1245,10 @@ fn create_cases<'tcx>(
                             source_info,
                             kind: StatementKind::Assign(Box::new((
                                 Place::from(ptr_local),
-                                Rvalue::Use(Operand::Copy(box_place.project_deeper(
-                                    &crate::elaborate_box_derefs::build_projection(
-                                        unique_ty, nonnull_ty, ptr_ty,
-                                    ),
-                                    tcx,
+                                Rvalue::Use(Operand::Copy(tcx.mk_place_field(
+                                    box_place,
+                                    Field::new(0),
+                                    ptr_ty,
                                 ))),
                             ))),
                         });

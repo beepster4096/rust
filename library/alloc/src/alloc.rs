@@ -6,6 +6,8 @@
 use core::intrinsics;
 use core::intrinsics::{min_align_of_val, size_of_val};
 
+#[cfg(not(bootstrap))]
+use core::ptr::super_ptr;
 use core::ptr::Unique;
 #[cfg(not(test))]
 use core::ptr::{self, NonNull};
@@ -331,11 +333,15 @@ unsafe fn exchange_malloc(size: usize, align: usize) -> *mut u8 {
 // well.
 // For example if `Box` is changed to  `struct Box<T: ?Sized, A: Allocator>(Unique<T>, A)`,
 // this function has to be changed to `fn box_free<T: ?Sized, A: Allocator>(Unique<T>, A)` as well.
-pub(crate) const unsafe fn box_free<T: ?Sized, A: ~const Allocator + ~const Destruct>(
-    ptr: Unique<T>,
+const unsafe fn box_free<T: ?Sized, A: ~const Allocator + ~const Destruct>(
+    #[cfg(bootstrap)] ptr: Unique<T>,
+    #[cfg(not(bootstrap))] ptr: super_ptr!(T),
     alloc: A,
 ) {
     unsafe {
+        #[cfg(not(bootstrap))]
+        let ptr = Unique::new_unchecked(ptr as *mut T);
+
         let size = size_of_val(ptr.as_ref());
         let align = min_align_of_val(ptr.as_ref());
         let layout = Layout::from_size_align_unchecked(size, align);

@@ -807,9 +807,10 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
                     // `dyn Trait`.
                     // To get a `*mut RcBox<Self>`, we just keep unwrapping newtypes until
                     // we get a value of a built-in pointer type
-                    'descend_newtypes: while !op.layout.ty.is_unsafe_ptr()
-                        && !op.layout.ty.is_region_ptr()
-                    {
+                    'descend_newtypes: while !matches!(
+                        op.layout.ty.kind(),
+                        ty::RawPtr(_) | ty::Ref(..) | ty::SuperPtr(_)
+                    ) {
                         for i in 0..op.layout.fields.count() {
                             let field = op.extract_field(&mut bx, i);
                             if !field.layout.is_zst() {

@@ -242,7 +242,7 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
                             base::unsize_ptr(&mut bx, lldata, operand.layout.ty, cast.ty, llextra);
                         OperandValue::Pair(lldata, llextra)
                     }
-                    mir::CastKind::Pointer(PointerCast::MutToConstPointer)
+                    mir::CastKind::Pointer(PointerCast::MutToConstPointer | PointerCast::SuperToMutPointer)
                     | mir::CastKind::Misc
                         if bx.cx().is_backend_scalar_pair(operand.layout) =>
                     {

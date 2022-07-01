@@ -2070,7 +2070,9 @@ impl<'tcx> SizeSkeleton<'tcx> {
         };
 
         match *ty.kind() {
-            ty::Ref(_, pointee, _) | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. }) => {
+            ty::Ref(_, pointee, _)
+            | ty::RawPtr(ty::TypeAndMut { ty: pointee, .. })
+            | ty::SuperPtr(pointee) => {
                 let non_zero = !ty.is_unsafe_ptr();
                 let tail = tcx.struct_tail_erasing_lifetimes(pointee, param_env);
                 match tail.kind() {
@@ -3438,9 +3440,10 @@ fn make_thin_self_ptr<'tcx>(
         // To get the type `*mut RcBox<Self>`, we just keep unwrapping newtypes until we
         // get a built-in pointer type
         let mut fat_pointer_layout = layout;
-        'descend_newtypes: while !fat_pointer_layout.ty.is_unsafe_ptr()
-            && !fat_pointer_layout.ty.is_region_ptr()
-        {
+        'descend_newtypes: while !matches!(
+            fat_pointer_layout.ty.kind(),
+            ty::RawPtr(_) | ty::Ref(..) | ty::SuperPtr(_)
+        ) {
             for i in 0..fat_pointer_layout.fields.count() {
                 let field_layout = fat_pointer_layout.field(cx, i);
 

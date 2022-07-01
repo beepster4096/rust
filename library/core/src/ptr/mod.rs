@@ -1980,3 +1980,13 @@ pub macro addr_of($place:expr) {
 pub macro addr_of_mut($place:expr) {
     &raw mut $place
 }
+
+/// Macro version of `*super T`.
+/// Bootstrap compiler cannot parse this type, even behind `#[cfg(not(bootstrap))]`, so a macro is needed.
+#[unstable(feature = "super_pointer", issue = "none")]
+#[rustc_macro_transparency = "semitransparent"]
+#[doc(hidden)]
+#[cfg(not(bootstrap))]
+pub macro super_ptr($T:ty) {
+    *super $T
+}

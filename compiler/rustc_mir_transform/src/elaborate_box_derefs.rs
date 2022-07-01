@@ -3,46 +3,14 @@
 //! Box is not actually a pointer so it is incorrect to dereference it directly.
 
 use crate::MirPass;
-use rustc_hir::def_id::DefId;
 use rustc_index::vec::Idx;
 use rustc_middle::mir::patch::MirPatch;
 use rustc_middle::mir::visit::MutVisitor;
 use rustc_middle::mir::*;
-use rustc_middle::ty::subst::Subst;
-use rustc_middle::ty::{Ty, TyCtxt};
-
-/// Constructs the types used when accessing a Box's pointer
-pub fn build_ptr_tys<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    pointee: Ty<'tcx>,
-    unique_did: DefId,
-    nonnull_did: DefId,
-) -> (Ty<'tcx>, Ty<'tcx>, Ty<'tcx>) {
-    let substs = tcx.intern_substs(&[pointee.into()]);
-    let unique_ty = tcx.bound_type_of(unique_did).subst(tcx, substs);
-    let nonnull_ty = tcx.bound_type_of(nonnull_did).subst(tcx, substs);
-    let ptr_ty = tcx.mk_imm_ptr(pointee);
-
-    (unique_ty, nonnull_ty, ptr_ty)
-}
-
-// Constructs the projection needed to access a Box's pointer
-pub fn build_projection<'tcx>(
-    unique_ty: Ty<'tcx>,
-    nonnull_ty: Ty<'tcx>,
-    ptr_ty: Ty<'tcx>,
-) -> [PlaceElem<'tcx>; 3] {
-    [
-        PlaceElem::Field(Field::new(0), unique_ty),
-        PlaceElem::Field(Field::new(0), nonnull_ty),
-        PlaceElem::Field(Field::new(0), ptr_ty),
-    ]
-}
+use rustc_middle::ty::{self, TyCtxt};
 
 struct ElaborateBoxDerefVisitor<'tcx, 'a> {
     tcx: TyCtxt<'tcx>,
-    unique_did: DefId,
-    nonnull_did: DefId,
     local_decls: &'a mut LocalDecls<'tcx>,
     patch: MirPatch<'tcx>,
 }
@@ -66,8 +34,7 @@ impl<'tcx, 'a> MutVisitor<'tcx> for ElaborateBoxDerefVisitor<'tcx, 'a> {
         if place.projection.first() == Some(&PlaceElem::Deref) && base_ty.is_box() {
             let source_info = self.local_decls[place.local].source_info;
 
-            let (unique_ty, nonnull_ty, ptr_ty) =
-                build_ptr_tys(tcx, base_ty.boxed_ty(), self.unique_did, self.nonnull_did);
+            let ptr_ty = tcx.mk_ty(ty::SuperPtr(base_ty.boxed_ty()));
 
             let ptr_local = self.patch.new_temp(ptr_ty, source_info.span);
             self.local_decls.push(LocalDecl::new(ptr_ty, source_info.span));
@@ -77,10 +44,11 @@ impl<'tcx, 'a> MutVisitor<'tcx> for ElaborateBoxDerefVisitor<'tcx, 'a> {
             self.patch.add_assign(
                 location,
                 Place::from(ptr_local),
-                Rvalue::Use(Operand::Copy(
-                    Place::from(place.local)
-                        .project_deeper(&build_projection(unique_ty, nonnull_ty, ptr_ty), tcx),
-                )),
+                Rvalue::Use(Operand::Copy(tcx.mk_place_field(
+                    Place::from(place.local),
+                    Field::new(0),
+                    ptr_ty,
+                ))),
             );
 
             place.local = ptr_local;
@@ -99,21 +67,12 @@ pub struct ElaborateBoxDerefs;
 
 impl<'tcx> MirPass<'tcx> for ElaborateBoxDerefs {
     fn run_pass(&self, tcx: TyCtxt<'tcx>, body: &mut Body<'tcx>) {
-        if let Some(def_id) = tcx.lang_items().owned_box() {
-            let unique_did = tcx.adt_def(def_id).non_enum_variant().fields[0].did;
-
-            let Some(nonnull_def) = tcx.type_of(unique_did).ty_adt_def() else {
-                span_bug!(tcx.def_span(unique_did), "expected Box to contain Unique")
-            };
-
-            let nonnull_did = nonnull_def.non_enum_variant().fields[0].did;
-
+        if tcx.lang_items().owned_box().is_some() {
             let patch = MirPatch::new(body);
 
             let (basic_blocks, local_decls) = body.basic_blocks_and_local_decls_mut();
 
-            let mut visitor =
-                ElaborateBoxDerefVisitor { tcx, unique_did, nonnull_did, local_decls, patch };
+            let mut visitor = ElaborateBoxDerefVisitor { tcx, local_decls, patch };
 
             for (block, BasicBlockData { statements, terminator, .. }) in
                 basic_blocks.iter_enumerated_mut()
@@ -158,13 +117,10 @@ impl<'tcx> MirPass<'tcx> for ElaborateBoxDerefs {
                         if elem == PlaceElem::Deref && base_ty.is_box() {
                             let new_projections = new_projections.get_or_insert_default();
 
-                            let (unique_ty, nonnull_ty, ptr_ty) =
-                                build_ptr_tys(tcx, base_ty.boxed_ty(), unique_did, nonnull_did);
+                            let ptr_ty = tcx.mk_ty(ty::SuperPtr(base_ty.boxed_ty()));
 
                             new_projections.extend_from_slice(&base.projection[last_deref..]);
-                            new_projections.extend_from_slice(&build_projection(
-                                unique_ty, nonnull_ty, ptr_ty,
-                            ));
+                            new_projections.push(PlaceElem::Field(Field::new(0), ptr_ty));
                             new_projections.push(PlaceElem::Deref);
 
                             last_deref = i;

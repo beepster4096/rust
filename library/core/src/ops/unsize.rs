@@ -1,4 +1,6 @@
 use crate::marker::Unsize;
+#[cfg(not(bootstrap))]
+use crate::ptr::super_ptr;
 
 /// Trait that indicates that this is a pointer or a wrapper for one,
 /// where unsizing can be performed on the pointee.
@@ -68,6 +70,10 @@ impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<*const U> for *mut T {}
 #[unstable(feature = "coerce_unsized", issue = "27732")]
 impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<*const U> for *const T {}
 
+#[unstable(feature = "coerce_unsized", issue = "27732")]
+#[cfg(not(bootstrap))]
+impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<super_ptr!(U)> for super_ptr!(T) {}
+
 /// `DispatchFromDyn` is used in the implementation of object safety checks (specifically allowing
 /// arbitrary self types), to guarantee that a method's receiver type can be dispatched on.
 ///
@@ -130,3 +136,7 @@ impl<T: ?Sized + Unsize<U>, U: ?Sized> DispatchFromDyn<*const U> for *const T {}
 // *mut T -> *mut U
 #[unstable(feature = "dispatch_from_dyn", issue = "none")]
 impl<T: ?Sized + Unsize<U>, U: ?Sized> DispatchFromDyn<*mut U> for *mut T {}
+
+#[unstable(feature = "dispatch_from_dyn", issue = "none")]
+#[cfg(not(bootstrap))]
+impl<T: ?Sized + Unsize<U>, U: ?Sized> DispatchFromDyn<super_ptr!(U)> for super_ptr!(T) {}

@@ -233,7 +233,7 @@ impl<'tcx> LayoutLlvmExt<'tcx> for TyAndLayout<'tcx> {
                 return llty;
             }
             let llty = match *self.ty.kind() {
-                ty::Ref(_, ty, _) | ty::RawPtr(ty::TypeAndMut { ty, .. }) => {
+                ty::Ref(_, ty, _) | ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::SuperPtr(ty) => {
                     cx.type_ptr_to(cx.layout_of(ty).llvm_type(cx))
                 }
                 ty::Adt(def, _) if def.is_box() => {
@@ -335,7 +335,7 @@ impl<'tcx> LayoutLlvmExt<'tcx> for TyAndLayout<'tcx> {
         // HACK(eddyb) special-case fat pointers until LLVM removes
         // pointee types, to avoid bitcasting every `OperandRef::deref`.
         match self.ty.kind() {
-            ty::Ref(..) | ty::RawPtr(_) => {
+            ty::Ref(..) | ty::RawPtr(_) | ty::SuperPtr(_) => {
                 return self.field(cx, index).llvm_type(cx);
             }
             // only wide pointer boxes are handled as pointers

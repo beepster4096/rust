@@ -11,6 +11,8 @@ use crate::cmp;
 use crate::fmt::Debug;
 use crate::hash::Hash;
 use crate::hash::Hasher;
+#[cfg(not(bootstrap))]
+use crate::ptr::super_ptr;
 
 /// Types that can be transferred across thread boundaries.
 ///
@@ -43,6 +45,12 @@ pub unsafe auto trait Send {
 impl<T: ?Sized> !Send for *const T {}
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: ?Sized> !Send for *mut T {}
+
+/// Super pointers are `Send` if `T` is `Send` because the data they
+/// reference is unaliased.
+#[unstable(feature = "super_pointer", issue = "none")]
+#[cfg(not(bootstrap))]
+unsafe impl<T: Send + ?Sized> Send for super_ptr!(T) {}
 
 /// Types with a constant size known at compile time.
 ///
@@ -481,6 +489,12 @@ pub unsafe auto trait Sync {
 impl<T: ?Sized> !Sync for *const T {}
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: ?Sized> !Sync for *mut T {}
+
+/// Super pointers are `Sync` if `T` is `Sync` because the data they
+/// reference is unaliased.
+#[unstable(feature = "super_pointer", issue = "none")]
+#[cfg(not(bootstrap))]
+unsafe impl<T: Sync + ?Sized> Sync for super_ptr!(T) {}
 
 macro_rules! impls {
     ($t: ident) => {

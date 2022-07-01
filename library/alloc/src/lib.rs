@@ -172,6 +172,7 @@
 #![feature(slice_internals)]
 #![feature(staged_api)]
 #![feature(stmt_expr_attributes)]
+#![cfg_attr(not(bootstrap), feature(super_pointer))]
 #![cfg_attr(test, feature(test))]
 #![feature(unboxed_closures)]
 #![feature(unsized_fn_params)]

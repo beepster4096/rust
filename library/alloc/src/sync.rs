@@ -15,9 +15,9 @@ use core::intrinsics::abort;
 #[cfg(not(no_global_oom_handling))]
 use core::iter;
 use core::marker::{PhantomData, Unpin, Unsize};
-#[cfg(not(no_global_oom_handling))]
-use core::mem::size_of_val;
 use core::mem::{self, align_of_val_raw};
+#[cfg(not(no_global_oom_handling))]
+use core::mem::{size_of_val, ManuallyDrop};
 use core::ops::{CoerceUnsized, Deref, DispatchFromDyn, Receiver};
 use core::panic::{RefUnwindSafe, UnwindSafe};
 use core::pin::Pin;
@@ -30,7 +30,7 @@ use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 #[cfg(not(no_global_oom_handling))]
 use crate::alloc::handle_alloc_error;
 #[cfg(not(no_global_oom_handling))]
-use crate::alloc::{box_free, WriteCloneIntoRaw};
+use crate::alloc::WriteCloneIntoRaw;
 use crate::alloc::{AllocError, Allocator, Global, Layout};
 use crate::borrow::{Cow, ToOwned};
 use crate::boxed::Box;
@@ -1204,8 +1204,7 @@ impl<T: ?Sized> Arc<T> {
     #[cfg(not(no_global_oom_handling))]
     fn from_box(v: Box<T>) -> Arc<T> {
         unsafe {
-            let (box_unique, alloc) = Box::into_unique(v);
-            let bptr = box_unique.as_ptr();
+            let (bptr, alloc) = Box::into_raw_with_allocator(v);
 
             let value_size = size_of_val(&*bptr);
             let ptr = Self::allocate_for_ptr(bptr);
@@ -1218,7 +1217,7 @@ impl<T: ?Sized> Arc<T> {
             );
 
             // Free the allocation without dropping its contents
-            box_free(box_unique, alloc);
+            drop(Box::from_raw_in(bptr as *mut ManuallyDrop<T>, alloc));
 
             Self::from_ptr(ptr)
         }
