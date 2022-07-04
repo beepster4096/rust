@@ -15,7 +15,7 @@ LL |       let _z = y.clone();
 LL | / pub struct Box<
 LL | |     T: ?Sized,
 LL | |     #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global,
-LL | | >(Unique<T>, A);
+LL | | >(#[cfg(bootstrap)] Unique<T>, #[cfg(not(bootstrap))] super_ptr!(T), A);
    | |_- doesn't satisfy `Box<dyn Foo>: Clone`
    |
    = note: the following trait bounds were not satisfied:

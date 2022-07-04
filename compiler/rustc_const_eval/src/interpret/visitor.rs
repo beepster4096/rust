@@ -152,7 +152,7 @@ macro_rules! make_value_visitor {
                 Ok(())
             }
             /// Visits the given value as the pointer of a `Box`. There is nothing to recurse into.
-            /// The type of `v` will be a raw pointer, but this is a field of `Box<T>` and the
+            /// The type of `v` will be a super pointer, but this is a field of `Box<T>` and the
             /// pointee type is the actual `T`.
             #[inline(always)]
             fn visit_box(&mut self, _v: &Self::V) -> InterpResult<'tcx>
@@ -246,25 +246,10 @@ macro_rules! make_value_visitor {
 
                         // `Box` has two fields: the pointer we care about, and the allocator.
                         assert_eq!(v.layout().fields.count(), 2, "`Box` must have exactly 2 fields");
-                        let (unique_ptr, alloc) =
+                        let (ptr, alloc) =
                             (v.project_field(self.ecx(), 0)?, v.project_field(self.ecx(), 1)?);
-                        // Unfortunately there is some type junk in the way here: `unique_ptr` is a `Unique`...
-                        // (which means another 2 fields, the second of which is a `PhantomData`)
-                        assert_eq!(unique_ptr.layout().fields.count(), 2);
-                        let (nonnull_ptr, phantom) = (
-                            unique_ptr.project_field(self.ecx(), 0)?,
-                            unique_ptr.project_field(self.ecx(), 1)?,
-                        );
-                        assert!(
-                            phantom.layout().ty.ty_adt_def().is_some_and(|adt| adt.is_phantom_data()),
-                            "2nd field of `Unique` should be PhantomData but is {:?}",
-                            phantom.layout().ty,
-                        );
-                        // ... that contains a `NonNull`... (gladly, only a single field here)
-                        assert_eq!(nonnull_ptr.layout().fields.count(), 1);
-                        let raw_ptr = nonnull_ptr.project_field(self.ecx(), 0)?; // the actual raw ptr
-                        // ... whose only field finally is a raw ptr we can dereference.
-                        self.visit_box(&raw_ptr)?;
+
+                        self.visit_box(&ptr)?;
 
                         // The second `Box` field is the allocator, which we recursively check for validity
                         // like in regular structs.

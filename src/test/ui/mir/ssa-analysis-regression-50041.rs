@@ -2,15 +2,11 @@
 // compile-flags: -Z mir-opt-level=4
 
 #![crate_type = "lib"]
-#![feature(lang_items)]
+#![feature(lang_items, super_pointer)]
 #![no_std]
 
-struct NonNull<T: ?Sized>(*mut T);
-
-struct Unique<T: ?Sized>(NonNull<T>);
-
 #[lang = "owned_box"]
-pub struct Box<T: ?Sized>(Unique<T>);
+pub struct Box<T: ?Sized>(*super T);
 
 impl<T: ?Sized> Drop for Box<T> {
     fn drop(&mut self) {}
@@ -18,8 +14,8 @@ impl<T: ?Sized> Drop for Box<T> {
 
 #[lang = "box_free"]
 #[inline(always)]
-unsafe fn box_free<T: ?Sized>(ptr: Unique<T>) {
-    dealloc(ptr.0.0)
+unsafe fn box_free<T: ?Sized>(ptr: *super T) {
+    dealloc(ptr as *mut T)
 }
 
 #[inline(never)]
