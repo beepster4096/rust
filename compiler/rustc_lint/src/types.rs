@@ -694,6 +694,7 @@ fn ty_is_known_nonnull<'tcx>(cx: &LateContext<'tcx>, ty: Ty<'tcx>, mode: CItemKi
     match ty.kind() {
         ty::FnPtr(_) => true,
         ty::Ref(..) => true,
+        ty::SuperPtr(..) => true,
         ty::Adt(def, _) if def.is_box() && matches!(mode, CItemKind::Definition) => true,
         ty::Adt(def, substs) if def.repr().transparent() && !def.is_union() => {
             let marked_non_null = nonnull_optimization_guaranteed(tcx, *def);
@@ -751,6 +752,7 @@ fn get_nullable_type<'tcx>(cx: &LateContext<'tcx>, ty: Ty<'tcx>) -> Option<Ty<'t
             // must use an Option<fn(..) -> _> to represent it.
             ty
         }
+        ty::SuperPtr(ty) => tcx.mk_mut_ptr(ty),
 
         // We should only ever reach this case if ty_is_known_nonnull is extended
         // to other types.
@@ -1061,7 +1063,7 @@ impl<'a, 'tcx> ImproperCTypesVisitor<'a, 'tcx> {
                 help: Some(fluent::lint::improper_ctypes_tuple_help),
             },
 
-            ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::Ref(_, ty, _)
+            ty::RawPtr(ty::TypeAndMut { ty, .. }) | ty::Ref(_, ty, _) | ty::SuperPtr(ty)
                 if {
                     matches!(self.mode, CItemKind::Definition)
                         && ty.is_sized(self.cx.tcx.at(DUMMY_SP), self.cx.param_env)
