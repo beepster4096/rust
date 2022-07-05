@@ -183,11 +183,15 @@ fn dtorck_constraint_for_ty<'tcx>(
         | ty::Foreign(..)
         | ty::RawPtr(..)
         | ty::Ref(..)
-        | ty::SuperPtr(..)
         | ty::FnDef(..)
         | ty::FnPtr(_)
         | ty::GeneratorWitness(..) => {
             // these types never have a destructor
+        }
+
+        ty::SuperPtr(pointee) => {
+            // *super T owns T for dropck
+            constraints.dtorck_types.push(*pointee);
         }
 
         ty::Array(ety, _) | ty::Slice(ety) => {

@@ -33,13 +33,12 @@ pub fn trivial_dropck_outlives<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
         | ty::GeneratorWitness(..)
         | ty::RawPtr(_)
         | ty::Ref(..)
-        | ty::SuperPtr(_)
         | ty::Str
         | ty::Foreign(..)
         | ty::Error(_) => true,
 
-        // [T; N] and [T] have same properties as T.
-        ty::Array(ty, _) | ty::Slice(ty) => trivial_dropck_outlives(tcx, *ty),
+        // [T; N], [T] & *super T have same properties as T.
+        ty::Array(ty, _) | ty::Slice(ty) | ty::SuperPtr(ty) => trivial_dropck_outlives(tcx, *ty),
 
         // (T1..Tn) and closures have same properties as T1..Tn --
         // check if *all* of them are trivial.
