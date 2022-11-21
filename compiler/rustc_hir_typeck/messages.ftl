@@ -7,8 +7,8 @@ hir_typeck_functional_record_update_on_non_struct =
     functional record update syntax requires a struct
 
 hir_typeck_return_stmt_outside_of_fn_body =
-    return statement outside of function body
-    .encl_body_label = the return is part of this body...
+    `{$statement_kind}` statement outside of function body
+    .encl_body_label = the `{$statement_kind}` is part of this body...
     .encl_fn_label = ...not the enclosing function body
 
 hir_typeck_yield_expr_outside_of_generator =
