@@ -135,6 +135,7 @@ where
             | TerminatorKind::InlineAsm { .. }
             | TerminatorKind::Resume
             | TerminatorKind::Return
+            | TerminatorKind::TailCall { .. }
             | TerminatorKind::SwitchInt { .. }
             | TerminatorKind::Unreachable
             | TerminatorKind::Yield { .. } => {}

@@ -330,6 +330,7 @@ fn rustc_terminator_to_terminator(
             target: target.as_usize(),
             unwind: rustc_unwind_to_unwind(unwind),
         },
+        TailCall { .. } => todo!(),
         Yield { .. } => todo!(),
         GeneratorDrop => Terminator::GeneratorDrop,
         FalseEdge { .. } => todo!(),

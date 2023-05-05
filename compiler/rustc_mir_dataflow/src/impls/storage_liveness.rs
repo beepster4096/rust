@@ -276,6 +276,7 @@ impl<'mir, 'tcx> crate::GenKillAnalysis<'tcx> for MaybeRequiresStorage<'mir, 'tc
             | TerminatorKind::Goto { .. }
             | TerminatorKind::Resume
             | TerminatorKind::Return
+            | TerminatorKind::TailCall { .. }
             | TerminatorKind::SwitchInt { .. }
             | TerminatorKind::Unreachable => {}
         }
@@ -313,6 +314,7 @@ impl<'mir, 'tcx> crate::GenKillAnalysis<'tcx> for MaybeRequiresStorage<'mir, 'tc
             | TerminatorKind::Goto { .. }
             | TerminatorKind::Resume
             | TerminatorKind::Return
+            | TerminatorKind::TailCall { .. }
             | TerminatorKind::SwitchInt { .. }
             | TerminatorKind::Unreachable => {}
         }
