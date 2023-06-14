@@ -721,6 +721,42 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         self.cfg.terminate(block, source_info, TerminatorKind::Resume);
     }
 
+    /// Sets up the drops for explict tail calls.
+    ///
+    /// Unlike other kinds of early exits, tail calls do not go through the drop tree.
+    /// Instead, all scheduled drops are immediately added to the CFG.
+    pub(crate) fn break_for_tail_call(&mut self, mut block: BasicBlock) -> BlockAnd<()> {
+        // the innermost scope contains only the destructors for the tail call arguments
+        // we only want to drop these in case of a panic, so we skip it
+        for scope in self.scopes.scopes[1..].iter().rev().skip(1) {
+            for drop in scope.drops.iter().rev() {
+                match drop.kind {
+                    DropKind::Value => {
+                        let target = self.cfg.start_new_block();
+                        let terminator = TerminatorKind::Drop {
+                            target,
+                            // The caller will handle this if needed.
+                            unwind: UnwindAction::Terminate,
+                            place: drop.local.into(),
+                            replace: false,
+                        };
+                        self.cfg.terminate(block, drop.source_info, terminator);
+                        block = target;
+                    }
+                    DropKind::Storage => {
+                        let stmt = Statement {
+                            source_info: drop.source_info,
+                            kind: StatementKind::StorageDead(drop.local),
+                        };
+                        self.cfg.push(block, stmt);
+                    }
+                }
+            }
+        }
+
+        block.unit()
+    }
+
     // Add a dummy `Assign` statement to the CFG, with the span for the source code's `continue`
     // statement.
     fn add_dummy_assignment(&mut self, span: Span, block: BasicBlock, source_info: SourceInfo) {
