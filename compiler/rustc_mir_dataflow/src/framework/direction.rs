@@ -519,6 +519,10 @@ impl Direction for Forward {
                 }
             }
 
+            TailCall { .. } => {
+                // Tail calls don't have successors
+            }
+
             InlineAsm {
                 template: _,
                 ref operands,

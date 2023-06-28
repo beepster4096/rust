@@ -111,6 +111,7 @@ pub fn separate_const_switch(body: &mut Body<'_>) -> usize {
                         TerminatorKind::Resume
                         | TerminatorKind::Drop { .. }
                         | TerminatorKind::Call { .. }
+                        | TerminatorKind::TailCall { .. }
                         | TerminatorKind::Assert { .. }
                         | TerminatorKind::FalseUnwind { .. }
                         | TerminatorKind::Yield { .. }
@@ -174,6 +175,7 @@ pub fn separate_const_switch(body: &mut Body<'_>) -> usize {
             | TerminatorKind::FalseUnwind { .. }
             | TerminatorKind::Drop { .. }
             | TerminatorKind::Call { .. }
+            | TerminatorKind::TailCall { .. }
             | TerminatorKind::InlineAsm { .. }
             | TerminatorKind::Yield { .. } => {
                 span_bug!(

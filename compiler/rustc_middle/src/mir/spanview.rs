@@ -270,6 +270,7 @@ pub fn terminator_kind_name(term: &Terminator<'_>) -> &'static str {
         Call { .. } => "Call",
         Assert { .. } => "Assert",
         Yield { .. } => "Yield",
+        TailCall { .. } => "TailCall",
         GeneratorDrop => "GeneratorDrop",
         FalseEdge { .. } => "FalseEdge",
         FalseUnwind { .. } => "FalseUnwind",
