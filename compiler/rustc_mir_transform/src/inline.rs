@@ -327,6 +327,11 @@ impl<'tcx> Inliner<'tcx> {
     ) -> Option<CallSite<'tcx>> {
         // Only consider direct calls to functions
         let terminator = bb_data.terminator();
+
+        // FIXME(explicit_tail_calls): figure out if we can inline tail calls
+        //                             (this is different from the other fixme,
+        //                              this one is about tail calls in the caller,
+        //                              rather than the callee)
         if let TerminatorKind::Call { ref func, target, fn_span, .. } = terminator.kind {
             let func_ty = func.ty(caller_body, self.tcx);
             if let ty::FnDef(def_id, substs) = *func_ty.kind() {
@@ -829,6 +834,13 @@ impl<'tcx> Visitor<'tcx> for CostChecker<'_, 'tcx> {
                     self.cost += LANDINGPAD_PENALTY;
                 }
             }
+
+            // FIXME(explicit_tail_calls): figure out how exactly functions containing tail calls can be inlined (and if they even should)
+            TerminatorKind::TailCall { .. } => {
+                self.validation = Err("can't inline functions with tail calls");
+                return;
+            }
+
             _ => self.cost += INSTR_COST,
         }
 
@@ -1078,7 +1090,8 @@ impl<'tcx> MutVisitor<'tcx> for Integrator<'_, 'tcx> {
                 *unwind = self.map_unwind(*unwind);
             }
             TerminatorKind::TailCall { .. } => {
-                // FIXME(explicit_tail_calls): figure out how exactly tail calls are inlined
+                // Cost checker forbids tail calls
+                unreachable!()
             }
             TerminatorKind::Call { ref mut target, ref mut unwind, .. } => {
                 if let Some(ref mut tgt) = *target {
