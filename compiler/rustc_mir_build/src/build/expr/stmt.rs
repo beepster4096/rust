@@ -122,7 +122,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
 
                     debug!("expr_into_dest: fn_span={:?}", fn_span);
 
-                    unpack!(block = this.break_for_tail_call(block));
+                    unpack!(block = this.break_for_tail_call(block, &args, source_info));
 
                     this.cfg.terminate(
                         block,

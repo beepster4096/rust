@@ -22,4 +22,19 @@ fn f() {
 
 fn g() {}
 
+// EMIT_MIR tail_call_drops.f_with_arg.built.after.mir
+// EMIT_MIR tail_call_drops.f_with_arg.ElaborateDrops.diff
+fn f_with_arg(_arg1: String, _arg2: String) {
+    let _a = String::new();
+    let _b = 12;
+    let _c = String::new();
+    let _d = String::new();
+
+    drop(_c);
+
+    become g_with_arg(String::new(), String::new());
+}
+
+fn g_with_arg(_arg1: String, _arg2: String) {}
+
 fn main() {}

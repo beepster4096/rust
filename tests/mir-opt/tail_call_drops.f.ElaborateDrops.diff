@@ -54,13 +54,12 @@
       bb4: {
           StorageDead(_7);
           StorageDead(_6);
--         drop(_5) -> [return: bb5, unwind terminate];
-+         drop(_5) -> [return: bb5, unwind: bb13];
+          drop(_5) -> [return: bb5, unwind: bb10];
       }
   
       bb5: {
           StorageDead(_5);
--         drop(_4) -> [return: bb6, unwind terminate];
+-         drop(_4) -> [return: bb6, unwind: bb11];
 +         goto -> bb6;
       }
   
@@ -68,8 +67,8 @@
 +         _8 = const false;
           StorageDead(_4);
           StorageDead(_3);
--         drop(_2) -> [return: bb7, unwind terminate];
-+         drop(_2) -> [return: bb7, unwind: bb13];
+-         drop(_2) -> [return: bb7, unwind continue];
++         drop(_2) -> [return: bb7, unwind: bb12];
       }
   
       bb7: {
@@ -100,7 +99,7 @@
 +     }
 + 
 +     bb13 (cleanup): {
-+         abort;
++         unreachable;
 +     }
 + 
 +     bb14 (cleanup): {
