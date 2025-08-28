@@ -1547,7 +1547,11 @@ fn report_ice(
     #[cfg(windows)]
     if env::var("RUSTC_BREAK_ON_ICE").is_ok() {
         // Trigger a debugger if we crashed during bootstrap
-        unsafe { windows::Win32::System::Diagnostics::Debug::DebugBreak() };
+        unsafe {
+            if windows::Win32::System::Diagnostics::Debug::IsDebuggerPresent().as_bool() {
+                windows::Win32::System::Diagnostics::Debug::DebugBreak()
+            }
+        };
     }
 }
 

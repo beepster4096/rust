@@ -1,5 +1,7 @@
 //! Validates the MIR to ensure that invariants are upheld.
 
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
+
 use rustc_abi::{ExternAbi, FIRST_VARIANT, Size};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_hir::LangItem;
@@ -32,8 +34,8 @@ pub(super) struct Validator {
     pub when: String,
 }
 
-impl<'tcx> crate::MirPass<'tcx> for Validator {
-    fn run_pass(&self, tcx: TyCtxt<'tcx>, body: &mut Body<'tcx>) {
+impl Validator {
+    fn run_pass_inner<'tcx>(&self, tcx: TyCtxt<'tcx>, body: &mut Body<'tcx>) {
         // FIXME(JakobDegen): These bodies never instantiated in codegend anyway, so it's not
         // terribly important that they pass the validator. However, I think other passes might
         // still see them, in which case they might be surprised. It would probably be better if we
@@ -88,6 +90,23 @@ impl<'tcx> crate::MirPass<'tcx> for Validator {
                 Location::START,
                 format!("Free regions in optimized {} MIR", body.phase.name()),
             );
+        }
+    }
+}
+
+impl<'tcx> crate::MirPass<'tcx> for Validator {
+    fn run_pass(&self, tcx: TyCtxt<'tcx>, body: &mut Body<'tcx>) {
+        let res = catch_unwind(AssertUnwindSafe(|| {
+            self.run_pass_inner(tcx, body);
+        }));
+
+        if let Err(payload) = res {
+            eprintln!(
+                "\nnote: panic during MIR validation of {:?} ({})",
+                body.source.instance,
+                self.when,
+            );
+            resume_unwind(payload);
         }
     }
 
